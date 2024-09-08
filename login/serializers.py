@@ -17,30 +17,52 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
 class EmpresaSerializer(serializers.HyperlinkedModelSerializer):
     usuarios = serializers.StringRelatedField(many=True, read_only=True)
     sedes = serializers.StringRelatedField(many=True,read_only=True)
-
+    empleados = serializers.StringRelatedField(many=True,read_only=True)
     class Meta:
         model = Empresa
         fields = ['url', 'razon_social', 
                   'registro','direccion','estado',
-                  'fecha_creacion', 'usuarios', 'sedes']
+                  'fecha_creacion', 'usuarios', 'sedes', 'empleados']
         
 
 class UsuarioSerializer(serializers.HyperlinkedModelSerializer):
-    herramientas = serializers.StringRelatedField(many=True, read_only=True)
-    permisos = serializers.StringRelatedField(many=True, read_only=True)
-    
+    empresas = serializers.StringRelatedField(many=True, read_only=True)
+
     class Meta:
         model = Usuario
         fields = [
-            '__all__',
-            'herramientas',
-            'permisos'
+            'nombre',
+            'email',
+            'password',
+            'estado',
+            'fecha_creacion',
+            'empresas'
         ]
         
+class UsuarioEmpresaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UsuarioEmpresa
+        fields = [
+            'empresa_id',
+            'usuario_id'
+        ]
+
+class EmpleadoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Empleado
+        fields = [
+            'nombre',
+            'email',
+            'password',
+            'estado',
+            'fecha_creacion',
+            'grupo_id',
+            'empresa_id'
+        ]
 
 class GrupoSerializer(serializers.HyperlinkedModelSerializer):
     herramientas = serializers.StringRelatedField(many=True, read_only=True)
-    usuarios_grupo = serializers.StringRelatedField(many=True, read_only=True)
+    empleados_grupo = serializers.StringRelatedField(many=True, read_only=True)
     permisos = serializers.StringRelatedField(many=True, read_only=True)
     
     class Meta:
@@ -50,14 +72,14 @@ class GrupoSerializer(serializers.HyperlinkedModelSerializer):
             'fecha_creacion',
             'url',
             'herramientas',
-            'usuarios_grupo',
+            'empleados_grupo',
             'permisos'
         ]
 
 
 class HerramientaSerializer(serializers.HyperlinkedModelSerializer):
     grupos = serializers.StringRelatedField(many=True, read_only=True)
-    herramientas_usuario =serializers.StringRelatedField(many=True, read_only=True)
+    herramientas_empleado =serializers.StringRelatedField(many=True, read_only=True)
     
     class Meta:
         model = Herramienta
@@ -67,21 +89,25 @@ class HerramientaSerializer(serializers.HyperlinkedModelSerializer):
             'posicion',
             'url',
             'grupos',
-            'herramientas_usuario'
+            'herramientas_empleado'
         ]
 
 class HerramientaGrupoSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = HerramientaGrupo
         fields = [
-            '__all__'
+            'herramienta_id',
+            'grupo_id',
+            'fecha_creacion'
         ]
 
-class HerramientaUsuarioSerializer(serializers.HyperlinkedModelSerializer):
+class HerramientaEmpleadoSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = HerramientaUsuario
+        model = HerramientaEmpleado
         fields = [
-           '__all__'
+            'herramienta_id',
+            'empleado_id',
+            'fecha_creacion'
         ]
     
 class PermisoSerializer(serializers.HyperlinkedModelSerializer):
@@ -91,7 +117,7 @@ class PermisoSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Permiso
         fields = [
-            '__all__',
+            'nombre',
             'grupos_permiso',
             'permisos_grupo'
         ]
@@ -100,19 +126,34 @@ class PermisoGrupoSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = PermisoGrupo
         fields = [
-           '__all__'
+        'permiso_id',
+        'grupo_id',
+        'fecha_creacion'
         ]
 
-class PermisoUsuarioSerializer(serializers.HyperlinkedModelSerializer):
+class PermisoEmpleadoSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = PermisoUsuario
+        model = PermisoEmpleado
         fields = [
-        '__all__'
+        'permiso_id',
+        'empleado_id',
+        'fecha_creacion'
         ]
 
-class SesionSerializer(serializers.HyperlinkedModelSerializer):
+class SesionUsuarioSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = Sesion
+        model = SesionUsuario
         fields = [
-            '__all__'
+            'usuario_id',
+            'token',
+            'fecha_creacion'
+        ]
+
+class SesionEmpleadoSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = SesionEmpleado
+        fields = [
+            'empleado_id',
+            'token',
+            'fecha_creacion'
         ]

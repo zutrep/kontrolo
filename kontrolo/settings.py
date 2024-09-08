@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'rest_framework.authtoken',
     'contabilidad.apps.ContabilidadConfig',
     'compras.apps.ComprasConfig',
     'logistica.apps.LogisticaConfig',
