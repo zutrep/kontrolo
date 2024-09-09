@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from jose import jws
 import base64
 
+
 class GeneraSesion():
     def getSesion(token, usuario):
         existe_sesion = None
@@ -32,7 +33,10 @@ class GeneraToken():
 class Owner():
     def getOwner(request):
         token = GeneraToken.getToken(request=request)
-        sesion = SesionUsuario.objects.get(token=token)
+        try:
+            sesion = SesionUsuario.objects.get(token=token)
+        except:
+            return False
         usuario = Usuario.objects.get(id=sesion.usuario_id)
         return usuario
     
@@ -50,9 +54,9 @@ class IsConectedUsuario():
             return True
 
 
-class IsOwnerUsuario():
+class Autenticado(permissions.BasePermission):
 
-    def has_permission(request):
+    def has_permission(self,request,view):
         token = GeneraToken.getToken(request)
         sesion = None
         try:
@@ -61,13 +65,14 @@ class IsOwnerUsuario():
             pass
             
         if sesion:
-            if sesion.token == request.data['token']:
-                return True
-            else:
-                return False
-        else:
+           
+            return True
+        else:            
             return False
-        
+
+
+
+    
 
 
 

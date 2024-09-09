@@ -35,6 +35,8 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         action = self.action
         if action == 'destroy' or action == 'list' or action == 'partial_update':
             permission_classes = [permissions.IsAdminUser]
+        elif action == 'update':
+            permission_classes = [permisos.Autenticado]
         else:
             permission_classes = [permissions.AllowAny]
                     
@@ -137,7 +139,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 class EmpresaViewSet(viewsets.ModelViewSet):
     queryset = Empresa.objects.all().order_by('razon_social')
     serializer_class = EmpresaSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permisos.Autenticado]
 
     def create(self,request):
         owner = permisos.Owner.getOwner(request)
@@ -156,7 +158,6 @@ class EmpresaViewSet(viewsets.ModelViewSet):
     
     def list(self,request):
         owner = permisos.Owner.getOwner(request)
-
         empresas = [{
             'razon_social':empresa.razon_social,
             'registro':empresa.registro,
@@ -167,6 +168,7 @@ class EmpresaViewSet(viewsets.ModelViewSet):
     
     def retrieve(self,request,pk=None):
         owner = permisos.Owner.getOwner(request)
+
         data = [{
             'id':empresa.id,
             'razon_social':empresa.razon_social,
@@ -204,7 +206,7 @@ class EmpresaViewSet(viewsets.ModelViewSet):
 class GrupoViewSet(viewsets.ModelViewSet):
     queryset = Grupo.objects.all().order_by('nombre')
     serializer_class = GrupoSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permisos.Autenticado]
 
     def create(self,request):
         owner = permisos.Owner.getOwner(request)
