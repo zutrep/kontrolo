@@ -39,13 +39,6 @@ class UsuarioSerializer(serializers.HyperlinkedModelSerializer):
             'empresas'
         ]
         
-class UsuarioEmpresaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UsuarioEmpresa
-        fields = [
-            'empresa_id',
-            'usuario_id'
-        ]
 
 class EmpleadoSerializer(serializers.ModelSerializer):
     class Meta:
