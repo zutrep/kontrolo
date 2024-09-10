@@ -8,10 +8,6 @@ class SedeViewSet(viewsets.ReadOnlyModelViewSet):
     herramienta = "sede"
     permission_classes = [permisos.EsEmpleado]
 
-    def create(self, request):
-        pass
-        
-
 
 class AlmacenViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Almacen.objects.all()

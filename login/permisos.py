@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from jose import jws
 import base64
 
+
+
 class GeneraSesionEmpleado():
     def getSesion(token, usuario):
         existe_sesion = None
@@ -84,6 +86,16 @@ class IsConectedUsuario():
         if sesion:
             return True
 
+class CrudPermissions(permissions.BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+
+
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        else:
+
+            return False
 
 class Autenticado(permissions.BasePermission):
 
@@ -106,7 +118,7 @@ class Autenticado(permissions.BasePermission):
 class EsEmpleado(permissions.BasePermission):
 
     def has_permission(self,request,view):
-       
+
         token = GeneraToken.getToken(request)
         sesion = None
         try:
@@ -131,6 +143,22 @@ class EsEmpleado(permissions.BasePermission):
         else:
             autenticado = Autenticado.has_permission(self,request=request,view=view)    
             return autenticado
+        
+
+        
+    def has_object_permission(self, request, view, obj):
+
+
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        else:
+            #el objeto tiene un usuario como owner
+            #buscar el usuario o empleado que hace el request con su respectivo token
+            token = GeneraToken.getToken(request)
+            #print(request.user)
+            return True
+
+
 
 
 
