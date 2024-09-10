@@ -33,6 +33,7 @@ class Empleado(models.Model):
     password = models.CharField(max_length=250)
     estado = models.SmallIntegerField(default=1)
     fecha_creacion = models.DateTimeField(default=timezone.now)
+    last_login = models.DateTimeField(null=True)
     empresa = models.ForeignKey(Empresa,related_name='empleados', on_delete=models.CASCADE)
     grupo = models.ForeignKey(Grupo,related_name='empleados_grupo', on_delete=models.CASCADE)
 

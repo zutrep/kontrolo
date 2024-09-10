@@ -6,14 +6,20 @@ class SedeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Sede
-        fields = ['__all__']
+        fields = [
+            'nombre',
+            'direccion',
+            'estado',
+            'fecha_creacion',
+            'empresa'
+        ]
 
 class AlmacenSerializer(serializers.ModelSerializer):
     productos = serializers.StringRelatedField(many=True,read_only=True)
 
     class Meta:
         model = Almacen
-        fields = ['__all__', 'productos']
+        fields = '__all__'
 
 class UnidadSerializer(serializers.ModelSerializer):
     class Meta:

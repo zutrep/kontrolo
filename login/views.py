@@ -1,7 +1,7 @@
 from django.contrib.auth.models import Group, User
 from rest_framework import permissions, viewsets
 from login import permisos
-from login.models import Usuario, SesionUsuario
+from login.models import Usuario, SesionUsuario, SesionEmpleado
 from rest_framework.response import Response
 from django.utils import timezone
 from login.serializers import *
@@ -225,7 +225,7 @@ class GrupoViewSet(viewsets.ModelViewSet):
         owner = permisos.Owner.getOwner(request)
         try:
             grupos = Grupo.objects.filter(usuario_id = owner.id)
-            data = [{'id':grupo.id,'nombre':grupo.nombre, 'usuario':grupo.usuario} for grupo in grupos]
+            data = [{'id':grupo.id,'nombre':grupo.nombre, 'usuario':grupo.usuario.id} for grupo in grupos]
         except:
            return Response({'respuesta':False,'mensaje':'Error algo salio mal'})
 
@@ -268,39 +268,183 @@ class GrupoViewSet(viewsets.ModelViewSet):
 class EmpleadoViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Empleado.objects.all()
     serializer_class = EmpleadoSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
+    def get_permissions(self):
+        action = self.action
+        if action == 'destroy' or action == 'list' or action == 'partial_update':
+            permission_classes = [permisos.Autenticado]
+        elif action == 'update':
+            permission_classes = [permisos.EsEmpleado]
+        else:
+            permission_classes = [permissions.AllowAny]
+                    
+        return [permission() for permission in permission_classes]
 
+    def create(self, request):
+        nombre = None
+        try:
+            nombre = request.data['nombre']
+        except:
+            pass
+
+        email = request.data['email']
+        password = request.data['password']
+
+        if not nombre:
+            today = timezone.now()
+            empleado = None
+            try:
+                empleado = Empleado.objects.get(email=email,password=password)
+                empleado.last_login = today
+                empleado.save() 
+            except:
+                pass
+
+            if empleado:
+                existe_sesion = None
+                try:
+                    existe_sesion = SesionEmpleado.objects.get(empleado_id=empleado.id)
+                except:
+                    pass
+
+                if existe_sesion:
+                    existe_sesion.delete()
+                
+                token = permisos.GeneraToken.getToken(request)
+              
+                #generar sesion de ususario
+                permisos.GeneraSesionEmpleado.getSesion(token, empleado)
+
+                return Response({'respuesta':True,'mensaje':'login exitoso','token':token})
+            else:
+                return Response({'respuesta':False,'mensaje':'correo o password incorrectos'})
+        else:
+            try:
+                empresa = Empresa.objects.get(id=request.data['empresa'])
+                grupo = Grupo.objects.get(id=request.data['grupo'])
+                empleado = Empleado(
+                    nombre=nombre,
+                    email=email,
+                    password=password,
+                    empresa=empresa,
+                    grupo=grupo
+                    )
+                empleado.save()
+                return Response({'respuesta':True,'mensaje':'Empleado creado con exito'})
+            except:
+                return Response({'respuesta':False,'mensaje':'Registro de empleado fallido'})
+            
+    def list(self, request):
+        empresa =Empresa.objects.get(id= request.data['empresa'])
+        try:
+            empleados = Empleado.objects.filter(empresa_id=empresa.id)
+            data = [{
+                'nombre':empleado.nombre,
+                'email':empleado.email,
+                'password':empleado.password,
+                'estado':empleado.estado,
+                'fecha_creacion':empleado.fecha_creacion,
+                'empresa':empleado.empresa,
+                'grupo':empleado.grupo
+                } for empleado in empleados]
+        except:
+           return Response({'respuesta':False,'mensaje':'Error algo salio mal'})
+
+        return Response(data)
+    
+    def retrieve(self,request,pk=None):
+        
+        try:
+            empleados = Empleado.objects.filter(id=pk)
+            data = [{
+                'nombre':empleado.nombre,
+                'email':empleado.email,
+                'password':empleado.password,
+                'estado':empleado.estado,
+                'fecha_creacion':empleado.fecha_creacion,
+                'empresa':empleado.empresa,
+                'grupo':empleado.grupo
+                } for empleado in empleados]
+        except:
+           return Response({'respuesta':False,'mensaje':'Error algo salio mal'})
+
+        return Response(data)
+    
+    def update(self,request,pk=None):
+        try:
+            empleado = Empleado.objects.get(id=request.data['id'])
+            empleado.nombre=request.data['nombre']
+            empleado.email=request.data['email']
+            empleado.password=request.data['password']
+            empleado.estado=request.data['estado']
+            empleado.empresa=request.data['empresa']
+            empleado.grupo=request.data['grupo']
+            empleado.save()
+            
+        except:
+           return Response({'respuesta':False,'mensaje':'Error algo salio mal'})
+
+        return Response({'respuesta':True,'mensaje':'Se actualizaron correctamente los datos'})
+    
+    def destroy(self,request,pk=None):
+        try:
+            empleado = Empleado.objects.get(id=request.data['id'])
+            empleado.estado=request.data['estado']
+            empleado.save()
+            
+        except:
+           return Response({'respuesta':False,'mensaje':'Error algo salio mal'})
+
+        return Response({'respuesta':True,'mensaje':'Se elimino correctamente el empleado'})
+    
 
 class HerramientaViewSet(viewsets.ModelViewSet):
     queryset = Herramienta.objects.all()
     serializer_class = HerramientaSerializer
-    permission_classes = [permissions.IsAuthenticated]
+
+    def get_permissions(self):
+        action = self.action
+        if action == 'list' or action == 'retrieve':
+            permission_classes = [permisos.Autenticado]
+        else:
+            permission_classes = [permissions.IsAdminUser]
+                    
+        return [permission() for permission in permission_classes]
+
 
 class HerramientaGrupoViewSet(viewsets.ModelViewSet):
     queryset = HerramientaGrupo.objects.all()
     serializer_class = HerramientaGrupoSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permisos.Autenticado]
 
 class HerramientaEmpleadoViewSet(viewsets.ModelViewSet):
     queryset = HerramientaEmpleado.objects.all()
     serializer_class = HerramientaEmpleadoSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permisos.Autenticado]
 
 class PermisoViewSet(viewsets.ModelViewSet):
     queryset = Permiso.objects.all()
     serializer_class = PermisoSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_permissions(self):
+        action = self.action
+        if action == 'list' or action == 'retrieve':
+            permission_classes = [permisos.Autenticado]
+        else:
+            permission_classes = [permissions.IsAdminUser]
+                    
+        return [permission() for permission in permission_classes]
 
 class PermisoGrupoViewSet(viewsets.ModelViewSet):
     queryset = PermisoGrupo.objects.all()
     serializer_class = PermisoGrupoSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permisos.Autenticado]
 
 class PermisoEmpleadoViewSet(viewsets.ModelViewSet):
     queryset = PermisoEmpleado.objects.all()
     serializer_class = PermisoEmpleadoSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permisos.Autenticado]
 
 class SesionEmpleadoViewSet(viewsets.ModelViewSet):
     queryset = SesionEmpleado.objects.all()

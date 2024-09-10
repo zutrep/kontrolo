@@ -89,8 +89,8 @@ class HerramientaGrupoSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = HerramientaGrupo
         fields = [
-            'herramienta_id',
-            'grupo_id',
+            'herramienta',
+            'grupo',
             'fecha_creacion'
         ]
 
